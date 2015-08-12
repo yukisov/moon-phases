@@ -8,7 +8,7 @@
   //-------------------------
   global.app.parameterManager = (function (global) {
 
-    var default_value_moon_speed = 0.50, // [日/秒]
+    var default_value_moon_speed = 0.25, // [日/秒]
         default_value_moon_size;  // [px]
 
     var getDefaultValueMoonSize = function() {
@@ -65,7 +65,7 @@
       $( "#slider-moon-speed" ).slider({
         orientation: "horizontal",
         range: "min",
-        max: 15, // from 0
+        max: 10, // from 0
         step: 0.25,
         value: default_value_moon_speed, // default
         slide: handlerOfMoonSpeed,
