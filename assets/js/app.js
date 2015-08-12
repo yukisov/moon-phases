@@ -182,11 +182,11 @@
       render();
 
       /* +++++ For resizing +++++ */
-      window.addEventListener('resize', function() {
+      /*window.addEventListener('resize', function() {
         renderer.setSize(elm_container.width() * 0.8, elm_container.height() * 0.8);
         camera.aspect = elm_container.width() / elm_container.height();
         camera.updateProjectionMatrix();
-      }, false );
+      }, false );*/
 
     };
 
