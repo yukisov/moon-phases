@@ -1,2 +1,7 @@
 node_modules
 .idea
+assets/vendor/stats.js-master
+public/css/app.css
+public/css/app.min.css
+public/js/app.js
+public/js/app.min.js
