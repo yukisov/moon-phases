@@ -52,7 +52,6 @@
       var containerElement = $('#moon-shape-container');
 
       default_value_moon_size = containerElement.width();
-      console.log('default_value_moon_size', default_value_moon_size);
 
     };
 
@@ -65,8 +64,8 @@
       $( "#slider-moon-speed" ).slider({
         orientation: "horizontal",
         range: "min",
-        max: 10, // from 0
-        step: 0.25,
+        max: 5, // from 0
+        step: 0.125,
         value: default_value_moon_speed, // default
         slide: handlerOfMoonSpeed,
         change: handlerOfMoonSpeed
@@ -115,8 +114,6 @@
      */
     var update = function(days) {
 
-      days = (Math.round(days * 100) % 2935) / 100;
-
       $('#moon-days').val(days);
 
     };
@@ -160,6 +157,8 @@
 
       elapsed_days = (currentTime - baseTime) / (1000 * 60 * 60 * 24); // 経過日数[日]
       elapsed_days = elapsed_days * (rate * (60 * 60 * 24)); // 表示用の値に変換する
+      elapsed_days = (Math.round(elapsed_days * 100) % (parseInt(cycle_days * 100))) / 100;
+
       x = 4 * Math.sin( rad_per_day * elapsed_days );
       z = (-1) * 2 * Math.cos( rad_per_day * elapsed_days );
       y = 0.158;
