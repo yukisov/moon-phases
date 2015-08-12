@@ -8,15 +8,51 @@
   //-------------------------
   global.app.parameterManager = (function (global) {
 
-    var default_value_moon_speed = 0.50; // [日/秒]
+    var default_value_moon_speed = 0.50, // [日/秒]
+        default_value_moon_size;  // [px]
+
+    var getDefaultValueMoonSize = function() {
+      return default_value_moon_size;
+    };
 
     /**
      * @param event
      * @param ui
      */
-    var handlerOfMoonDays = function(event, ui) {
+    var handlerOfMoonSpeed = function(event, ui) {
 
       $( "#amount-moon-speed" ).val( ui.value );
+
+    };
+
+    /**
+     * @param event
+     * @param ui
+     */
+    var handlerOfMoonSize = function(event, ui) {
+
+      var moonManager = global.app.moonManager,
+          renderer = moonManager.getRenderer(),
+          camera = moonManager.getCamera(),
+          size = ui.value;
+
+      renderer.setSize(size, size);
+      camera.aspect = size / size;
+      camera.updateProjectionMatrix();
+
+      $( "#amount-moon-size" ).val( size );
+
+    };
+
+    /**
+     *
+     */
+    var setDefaultValues = function() {
+
+      var containerElement = $('#moon-shape-container');
+
+      default_value_moon_size = containerElement.width();
+      console.log('default_value_moon_size', default_value_moon_size);
 
     };
 
@@ -25,16 +61,29 @@
      */
     var setEventHandlers = function() {
 
+      /* +++++ slider-moon-speed +++++ */
       $( "#slider-moon-speed" ).slider({
         orientation: "horizontal",
         range: "min",
         max: 15, // from 0
         step: 0.25,
         value: default_value_moon_speed, // default
-        slide: handlerOfMoonDays,
-        change: handlerOfMoonDays
+        slide: handlerOfMoonSpeed,
+        change: handlerOfMoonSpeed
       });
       $( "#amount-moon-speed" ).val( default_value_moon_speed );
+
+      /* +++++ slider-moon-size +++++ */
+      $( "#slider-moon-size" ).slider({
+        orientation: "horizontal",
+        range: "min",
+        max: 500, // from 0
+        step: 5,
+        value: default_value_moon_size, // default
+        slide: handlerOfMoonSize,
+        change: handlerOfMoonSize
+      });
+      $( "#amount-moon-size" ).val( default_value_moon_size );
 
     };
 
@@ -43,21 +92,23 @@
      */
     var init = function() {
 
+      setDefaultValues();
       setEventHandlers();
 
     };
 
     return {
-      init: init
+      init: init,
+      getDefaultValueMoonSize: getDefaultValueMoonSize
     };
 
 
   })(global);
 
-  //-------------------------
-  // moonDaysManager module
-  //-------------------------
-  global.app.moonDaysManager = (function (global) {
+  //--------------------------------------------
+  // moonDaysManager module （月齢管理モジュール）
+  //--------------------------------------------
+  global.app.moonDaysManager = (function (/*global*/) {
 
     /**
      * @param days
@@ -81,7 +132,19 @@
   //--------------------
   global.app.moonManager = (function (global) {
 
-    var container_size_rate = 0.8;
+    var renderer, camera, containerElement;
+
+    var getRenderer = function() {
+      return renderer;
+    };
+
+    var getCamera = function() {
+      return camera;
+    };
+
+    var getContainerElement = function() {
+      return containerElement;
+    };
 
     /**
      * @param lightObj
@@ -98,7 +161,7 @@
       elapsed_days = (currentTime - baseTime) / (1000 * 60 * 60 * 24); // 経過日数[日]
       elapsed_days = elapsed_days * (rate * (60 * 60 * 24)); // 表示用の値に変換する
       x = 4 * Math.sin( rad_per_day * elapsed_days );
-      z = (-1) * 4 * Math.cos( rad_per_day * elapsed_days );
+      z = (-1) * 2 * Math.cos( rad_per_day * elapsed_days );
       y = 0.158;
 
       lightObj.position.set(x, y, z);
@@ -116,19 +179,17 @@
 
       if(!Detector.webgl) Detector.addGetWebGLMessage();
 
-      var elm_container = $('#moon-shape-container');
-      var renderer = new THREE.WebGLRenderer({ antialias:true });
-      renderer.setSize(
-        elm_container.width() * container_size_rate,
-        elm_container.height() * container_size_rate
-      );
+      var moon_size_default = global.app.parameterManager.getDefaultValueMoonSize();
+
+      renderer = new THREE.WebGLRenderer({ antialias:true });
+      renderer.setSize( moon_size_default, moon_size_default );
       document.getElementById('moon-shape-container').appendChild(renderer.domElement);
 
       var scene = new THREE.Scene();
 
       /* +++++ Camera +++++ */
-      var camera = new THREE.PerspectiveCamera(
-        15, elm_container.width() / elm_container.height());
+      camera = new THREE.PerspectiveCamera(
+        15, moon_size_default / moon_size_default);
       camera.position.set(0, 0, 8);
       camera.lookAt(new THREE.Vector3(0, 0, 0));
       scene.add(camera);
@@ -142,11 +203,11 @@
       scene.add(ambient);
 
       /* +++++ 球体 +++++ */
-      var geometry = new THREE.SphereGeometry(1, 32, 16);
+      var geometry = new THREE.SphereGeometry(1, 32, 32);
       var material = new THREE.MeshPhongMaterial({
         color: 0xffffff,
         specular: 0xcccccc,
-        shininess: 10,
+        shininess: 0,
         ambient: 0xffffff,
         map: THREE.ImageUtils.loadTexture('img/moon.jpg') });
       var mesh = new THREE.Mesh(geometry, material);
@@ -166,12 +227,12 @@
       document.body.appendChild( stats.domElement );
 
       /* +++++ Loop +++++ */
-      var baseTime = +new Date;
+      var baseTime = +new Date();
       function render() {
 
         stats.begin();
 
-        moveLight(light, baseTime, +new Date);
+        moveLight(light, baseTime, +new Date());
 
         renderer.render(scene, camera);
 
@@ -181,17 +242,13 @@
       }
       render();
 
-      /* +++++ For resizing +++++ */
-      /*window.addEventListener('resize', function() {
-        renderer.setSize(elm_container.width() * 0.8, elm_container.height() * 0.8);
-        camera.aspect = elm_container.width() / elm_container.height();
-        camera.updateProjectionMatrix();
-      }, false );*/
-
     };
 
     return {
-      run: run
+      run: run,
+      getRenderer: getRenderer,
+      getCamera: getCamera,
+      getContainerElement: getContainerElement
     };
 
   })(global);
