@@ -129,7 +129,8 @@
   //--------------------
   global.app.moonManager = (function (global) {
 
-    var renderer, camera, containerElement;
+    var renderer, camera, containerElement,
+        x_prev, z_prev;
 
     var getRenderer = function() {
       return renderer;
@@ -147,6 +148,7 @@
      * @param lightObj
      * @param baseTime
      * @param currentTime
+     * @return {Boolean} - 変化があれば true, なければ false
      */
     var moveLight = function(lightObj, baseTime, currentTime) {
 
@@ -163,10 +165,18 @@
       z = (-1) * 2 * Math.cos( rad_per_day * elapsed_days );
       y = 0.158;
 
+      if (x === x_prev && z === z_prev) {
+        return false;
+      }
+
       lightObj.position.set(x, y, z);
 
       global.app.moonDaysManager.update(elapsed_days);
 
+      x_prev = x;
+      z_prev = z;
+
+      return true;
     };
 
     /**
@@ -231,9 +241,9 @@
 
         stats.begin();
 
-        moveLight(light, baseTime, +new Date());
-
-        renderer.render(scene, camera);
+        if (moveLight(light, baseTime, +new Date())) {
+          renderer.render(scene, camera);
+        }
 
         stats.end();
 
