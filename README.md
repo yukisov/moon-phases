@@ -1,4 +1,4 @@
-moon-shape
+moon-phases
 =====
 月の満ち欠けをシミュレートする
 
